@@ -8,6 +8,7 @@ http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/htt
 	<flow name="airport-infoFlow" doc:id="6839902a-272e-4fc1-8274-215ab2b35bea" >
 		<http:listener doc:name="Listener" doc:id="c2cd63f6-d5f8-42bf-b108-0c7540137a4f" path="/airport" allowedMethods="GET" config-ref="HTTP_Listener_config"/>
 		<logger level="INFO" doc:name="Logger" doc:id="acd6e5ae-392b-4a59-b3ee-f7cb63e7d1a0" />
+		<set-payload value="#[payload]" doc:name="Set Payload" doc:id="fd2176ff-3f68-463e-8407-09286974a686" />
 		<http:request method="GET" doc:name="Request" doc:id="bbcddfac-0441-4ad0-8143-34214ccae5f7" config-ref="HTTP_Request_IATA" responseTimeout="3000000" path="/airport">
 			<http:query-params ><![CDATA[#[output application/java
 ---
