@@ -6,8 +6,26 @@
 http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
 http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
 http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="controllers-aiport-infoFlow" doc:id="4dfe4dae-8e04-4505-83be-96005fbd0414" >
+		<http:listener doc:name="GET /controllers at airpot" doc:id="541689f5-d18a-46e5-b61a-c48c8c2475d3" config-ref="HTTP_Listener_config" path="/controllers" allowedMethods="GET"/>
+		<scatter-gather doc:name="Scatter-Gather" doc:id="def76fb8-be54-481a-9a91-2dba3e95ec19" >
+			<route >
+				<flow-ref doc:name="getAirports" doc:id="dd9ffed0-0e02-4da4-8d60-74de85acd3c8" name="airport-infoFlow"/>
+			</route>
+			<route >
+				<flow-ref doc:name="getTrainees" doc:id="ca8de277-5972-4995-9923-9e09677bc709" name="trainee-infoFlow"/>
+			</route>
+		</scatter-gather>
+		<ee:transform doc:name="Transform Message" doc:id="2e547978-7546-4919-8eea-a6f38060a718" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
 	<flow name="airport-infoFlow" doc:id="6839902a-272e-4fc1-8274-215ab2b35bea" >
-		<http:listener doc:name="Listener" doc:id="c2cd63f6-d5f8-42bf-b108-0c7540137a4f" path="/airports" allowedMethods="GET" config-ref="HTTP_Listener_config"/>
 		<logger level="INFO" doc:name="Logger" doc:id="acd6e5ae-392b-4a59-b3ee-f7cb63e7d1a0" />
 		<http:request method="GET" doc:name="Request" doc:id="bbcddfac-0441-4ad0-8143-34214ccae5f7" config-ref="HTTP_Request_IATA" responseTimeout="3000000" path="/airport">
 			<http:headers ><![CDATA[#[output application/java
@@ -24,7 +42,6 @@ http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/
 		<logger level="INFO" doc:name="Logger" doc:id="7bfa3968-2953-4e82-8565-55cd7bf4e632" />
 	</flow>
 	<flow name="trainee-infoFlow" doc:id="188ae327-a824-4ca1-8e84-471496c76a8e" >
-		<http:listener doc:name="Listener" doc:id="e1d2a906-5378-4010-8b41-55f19590ef3d" config-ref="HTTP_Listener_config" path="/trainees" allowedMethods="GET"/>
 		<db:select doc:name="Select" doc:id="e7a005c1-71e9-4928-a39b-3914e280c170" config-ref="Database_Config_Trainee">
 			<db:sql ><![CDATA[select * from trainees]]></db:sql>
 		</db:select>
