@@ -15,7 +15,7 @@ http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mu
 				<flow-ref doc:name="trainees-by-airportFlow" doc:id="63a21ca7-c211-48c5-9671-eb9c28c03c28" name="trainees-by-airportFlow" />
 			</when>
 			<otherwise>
-				<set-payload value="#[payload]" doc:name="Set Payload" doc:id="343cc2fd-5f55-45f5-a502-950db905d952" />
+				<flow-ref doc:name="trainees-by-experienceFlow" doc:id="1a5362ad-af5e-4f4d-b553-ff808be9deb1" name="trainees-by-experienceFlow"/>
 			</otherwise>
 		</choice>
 	</flow>
@@ -38,6 +38,40 @@ payload]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
 		<ee:transform doc:name="Transform Message" doc:id="2e547978-7546-4919-8eea-a6f38060a718">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+
+var airportInfo = payload."0".payload
+
+---
+payload."1".payload map ((obj, index) -> {
+	ID: obj.id,
+	name: obj.firstname ++" " ++ obj.lastname,
+	email: obj.email,
+	experienceYears: obj.experience,
+	airport: airportInfo
+}) orderBy -$.experienceYears
+
+
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="trainees-by-experienceFlow" doc:id="8a58dda1-3a84-4418-b7dc-88f744d6ce82">
+		<flow-ref doc:name="getTrainees" doc:id="bd5d39f9-ea94-41cb-bf6a-68d7769965ba" name="trainees-infoFlow" />
+		<foreach doc:name="For Each" doc:id="89025ec1-a15b-4682-b846-e04052082f7e" />
+		<flow-ref doc:name="getAirports" doc:id="c6f7da61-4fa7-46a8-a74e-147824b86257" name="airport-infoFlow" />
+		<logger level="INFO" doc:name="Logger" doc:id="8a6cf77e-8e84-4210-8880-4bf2debf591b" message="payload" />
+		<ee:transform doc:name="Transform Message" doc:id="a30377b2-f7c0-4898-895c-4a23d368fcb9">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<ee:transform doc:name="Transform Message" doc:id="87ed31d9-28ab-4923-8864-5faecbbc4552">
 			<ee:message>
 				<ee:set-payload><![CDATA[%dw 2.0
 output application/json
