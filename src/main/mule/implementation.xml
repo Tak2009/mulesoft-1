@@ -1,44 +1,60 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db"
-	xmlns:http="http://www.mulesoft.org/schema/mule/http"
-	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+<mule xmlns:validation="http://www.mulesoft.org/schema/mule/validation" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
 http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
 http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
-http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd">
 	<flow name="controllers-aiport-infoFlow" doc:id="4dfe4dae-8e04-4505-83be-96005fbd0414" >
 		<http:listener doc:name="GET /controllers at airpot" doc:id="541689f5-d18a-46e5-b61a-c48c8c2475d3" config-ref="HTTP_Listener_config" path="/controllers" allowedMethods="GET"/>
-		<scatter-gather doc:name="Scatter-Gather" doc:id="def76fb8-be54-481a-9a91-2dba3e95ec19" >
-			<route >
-				<flow-ref doc:name="getAirports" doc:id="dd9ffed0-0e02-4da4-8d60-74de85acd3c8" name="airport-infoFlow"/>
+		<validation:is-true doc:name="checkIfQueryParamExists" doc:id="048a56ec-da81-495b-933b-88fb293308ae" expression="#[sizeOf(attributes.queryParams) &gt; 0]" message='#["query parameter not set."]'/>
+		<choice doc:name="Choice" doc:id="25e27417-b1a6-42a1-9c1d-a828cba7cad5" >
+			<when expression='#[contains(attributes.queryString, "airport")]'>
+				<flow-ref doc:name="trainees-by-airportFlow" doc:id="63a21ca7-c211-48c5-9671-eb9c28c03c28" name="trainees-by-airportFlow" />
+			</when>
+			<otherwise>
+				<set-payload value="#[payload]" doc:name="Set Payload" doc:id="343cc2fd-5f55-45f5-a502-950db905d952" />
+			</otherwise>
+		</choice>
+	</flow>
+	<flow name="trainees-by-airportFlow" doc:id="8567a609-d083-43b0-9719-a30a38c54e8b" >
+		<scatter-gather doc:name="Scatter-Gather" doc:id="def76fb8-be54-481a-9a91-2dba3e95ec19">
+			<route>
+				<flow-ref doc:name="getAirports" doc:id="dd9ffed0-0e02-4da4-8d60-74de85acd3c8" name="airport-infoFlow" />
 			</route>
-			<route >
-				<flow-ref doc:name="getTrainees" doc:id="ca8de277-5972-4995-9923-9e09677bc709" name="trainee-infoFlow"/>
+			<route>
+				<flow-ref doc:name="getTrainees" doc:id="ca8de277-5972-4995-9923-9e09677bc709" name="trainees-infoFlow" />
 			</route>
 		</scatter-gather>
-		<logger level="INFO" doc:name="Logger" doc:id="7f937867-ce81-417a-bef6-5048608eff2e" message="payload"/>
-		<ee:transform doc:name="Transform Message" doc:id="a57d31ce-f151-4d68-86ed-e0901f4fda67" >
-			<ee:message >
-				<ee:set-payload ><![CDATA[%dw 2.0
+		<logger level="INFO" doc:name="Logger" doc:id="7f937867-ce81-417a-bef6-5048608eff2e" message="payload" />
+		<ee:transform doc:name="Transform Message" doc:id="a57d31ce-f151-4d68-86ed-e0901f4fda67">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
 output application/json
 ---
 payload]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
-		<ee:transform doc:name="Transform Message" doc:id="2e547978-7546-4919-8eea-a6f38060a718" >
-			<ee:message >
-				<ee:set-payload ><![CDATA[%dw 2.0
+		<ee:transform doc:name="Transform Message" doc:id="2e547978-7546-4919-8eea-a6f38060a718">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
 output application/json
 
 var airportInfo = payload."0".payload
 
 ---
 payload."1".payload map ((obj, index) -> {
-	firstname: obj.firstname,
-	lastname: obj.lastname,
+	ID: obj.id,
+	name: obj.firstname ++" " ++ obj.lastname,
+	email: obj.email,
 	experienceYears: obj.experience,
-	currentAirport: airportInfo
-})]]></ee:set-payload>
+	airport: airportInfo
+}) orderBy -$.experienceYears
+
+
+]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
 	</flow>
@@ -57,7 +73,7 @@ payload."1".payload map ((obj, index) -> {
 }]]]></http:query-params>
 		</http:request>
 	</flow>
-	<flow name="trainee-infoFlow" doc:id="188ae327-a824-4ca1-8e84-471496c76a8e" >
+	<flow name="trainees-infoFlow" doc:id="188ae327-a824-4ca1-8e84-471496c76a8e" >
 		<logger level="INFO" doc:name="Logger" doc:id="f0127806-1fd2-4779-b354-e471bae51588" />
 		<db:select doc:name="Select" doc:id="e7a005c1-71e9-4928-a39b-3914e280c170" config-ref="Database_Config_Trainee">
 			<db:sql ><![CDATA[SELECT * FROM trainees
