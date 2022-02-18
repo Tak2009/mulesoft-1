@@ -17,12 +17,28 @@ http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/
 			</route>
 		</scatter-gather>
 		<logger level="INFO" doc:name="Logger" doc:id="7f937867-ce81-417a-bef6-5048608eff2e" message="payload"/>
-		<ee:transform doc:name="Transform Message" doc:id="2e547978-7546-4919-8eea-a6f38060a718" >
+		<ee:transform doc:name="Transform Message" doc:id="a57d31ce-f151-4d68-86ed-e0901f4fda67" >
 			<ee:message >
 				<ee:set-payload ><![CDATA[%dw 2.0
 output application/json
 ---
 payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<ee:transform doc:name="Transform Message" doc:id="2e547978-7546-4919-8eea-a6f38060a718" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+
+var airportInfo = payload."0".payload
+
+---
+payload."1".payload map ((obj, index) -> {
+	firstname: obj.firstname,
+	lastname: obj.lastname,
+	experienceYears: obj.experience,
+	currentAirport: airportInfo
+})]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
 	</flow>

@@ -181,6 +181,10 @@ type scatter_sample = {|
 
 ]]></types:shape>
     </types:type>
+    <types:type name="scatter_json_reformatted" format="java">
+      <types:shape format="raml"><![CDATA[#%RAML 1.0 DataType
+type: string]]></types:shape>
+    </types:type>
   </types:catalog>
   <types:enrichment select="#6839902a-272e-4fc1-8274-215ab2b35bea">
     <types:processor-declaration>
@@ -216,6 +220,11 @@ type scatter_sample = {|
   </types:enrichment>
   <types:enrichment select="#2e547978-7546-4919-8eea-a6f38060a718">
     <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="scatter-sample"/>
+        </types:message>
+      </types:input-event>
       <types:output-event>
         <types:message>
           <types:payload type="scatter-sample"/>
