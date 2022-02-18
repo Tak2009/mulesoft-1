@@ -16,6 +16,7 @@ http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/
 				<flow-ref doc:name="getTrainees" doc:id="ca8de277-5972-4995-9923-9e09677bc709" name="trainee-infoFlow"/>
 			</route>
 		</scatter-gather>
+		<logger level="INFO" doc:name="Logger" doc:id="7f937867-ce81-417a-bef6-5048608eff2e" message="payload"/>
 		<ee:transform doc:name="Transform Message" doc:id="2e547978-7546-4919-8eea-a6f38060a718" >
 			<ee:message >
 				<ee:set-payload ><![CDATA[%dw 2.0
@@ -36,22 +37,16 @@ payload]]></ee:set-payload>
 			<http:query-params ><![CDATA[#[output application/java
 ---
 {
-	"iata" : attributes.queryParams.iata
+	"iata" : attributes.queryParams.airport
 }]]]></http:query-params>
 		</http:request>
-		<logger level="INFO" doc:name="Logger" doc:id="7bfa3968-2953-4e82-8565-55cd7bf4e632" />
 	</flow>
 	<flow name="trainee-infoFlow" doc:id="188ae327-a824-4ca1-8e84-471496c76a8e" >
+		<logger level="INFO" doc:name="Logger" doc:id="f0127806-1fd2-4779-b354-e471bae51588" />
 		<db:select doc:name="Select" doc:id="e7a005c1-71e9-4928-a39b-3914e280c170" config-ref="Database_Config_Trainee">
-			<db:sql ><![CDATA[select * from trainees]]></db:sql>
+			<db:sql ><![CDATA[SELECT * FROM trainees
+WHERE airportiata = :param ]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{param: attributes.queryParams.airport}]]]></db:input-parameters>
 		</db:select>
-		<ee:transform doc:name="Transform Message" doc:id="a4c28a5c-8dbc-47d0-98e3-9646b5c19f79" >
-			<ee:message >
-				<ee:set-payload ><![CDATA[%dw 2.0
-output application/json
----
-payload]]></ee:set-payload>
-			</ee:message>
-		</ee:transform>
 	</flow>
 </mule>

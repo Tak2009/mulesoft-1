@@ -124,6 +124,63 @@ type auto_188ae327_a824_4ca1_8e84_471496c76a8e_Output_Attributes = Null
 
 ]]></types:shape>
     </types:type>
+    <types:type name="scatter-sample" format="json">
+      <types:shape format="weave" example="examples/scatter-sample.json"><![CDATA[%dw 2.0
+
+type scatter_sample = {|
+  "0": {|
+    inboundAttachmentNames: Array<Any>, 
+    exceptionPayload: Null, 
+    inboundPropertyNames: Array<Any>, 
+    outboundAttachmentNames: Array<Any>, 
+    outboundPropertyNames: Array<Any>, 
+    payload: {|
+      id: Number {"typeId": "int"}, 
+      iata: String, 
+      icao: String, 
+      name: String, 
+      location: String, 
+      street_number: String, 
+      street: String, 
+      city: String, 
+      county: String, 
+      state: String, 
+      country_iso: String, 
+      country: String, 
+      postal_code: String, 
+      phone: String, 
+      latitude: Number {"typeId": "double"}, 
+      longitude: Number {"typeId": "double"}, 
+      uct: Number {"typeId": "int"}, 
+      website: String
+    |}, 
+    attributes: {|
+      headers: {|
+        "content-type": String, 
+        date: String, 
+        server: String, 
+        "x-rapidapi-region": String, 
+        "x-rapidapi-version": String, 
+        "content-length": String, 
+        connection: String
+      |}, 
+      reasonPhrase: String, 
+      statusCode: Number {"typeId": "int"}
+    |}
+  |}, 
+  "1": {|
+    inboundAttachmentNames: Array<Any>, 
+    exceptionPayload: Null, 
+    inboundPropertyNames: Array<Any>, 
+    outboundAttachmentNames: Array<Any>, 
+    outboundPropertyNames: Array<Any>, 
+    payload: Array<{|      firstname: String,       airportiata: String,       dob: String,       id: Number {"typeId": "int"},       experience: Number {"typeId": "int"},       email: String,       lastname: String    |}>, 
+    attributes: Null
+  |}
+|} {"example": "{\\\"0\\\":{\\\"inboundAttachmentNames\\\":[],\\\"exceptionPayload\\\":null,\\\"inboundPropertyNames\\\":[],\\\"outboundAttachmentNames\\\":[],\\\"outboundPropertyNames\\\":[],\\\"payload\\\":{\\\"id\\\":4044,\\\"iata\\\":\\\"LAX\\\",\\\"icao\\\":\\\"KLAX\\\",\\\"name\\\":\\\"Los Angeles International Airport\\\",\\\"location\\\":\\\"Los Angeles, California, United States\\\",\\\"street_number\\\":\\\"1\\\",\\\"street\\\":\\\"World Way\\\",\\\"city\\\":\\\"Los Angeles\\\",\\\"county\\\":\\\"Los Angeles County\\\",\\\"state\\\":\\\"California\\\",\\\"country_iso\\\":\\\"US\\\",\\\"country\\\":\\\"United States\\\",\\\"postal_code\\\":\\\"90045\\\",\\\"phone\\\":\\\"+1 855-463-5252\\\",\\\"latitude\\\":33.94159,\\\"longitude\\\":-118.40853,\\\"uct\\\":-420,\\\"website\\\":\\\"http:\\/\\/www.lawa.org\\/welcomelax.aspx\\\"},\\\"attributes\\\":{\\\"headers\\\":{\\\"content-type\\\":\\\"application\\/json; charset=UTF-8\\\",\\\"date\\\":\\\"Fri, 18 Feb 2022 11:21:41 GMT\\\",\\\"server\\\":\\\"RapidAPI-1.2.8\\\",\\\"x-rapidapi-region\\\":\\\"AWS - eu-west-1\\\",\\\"x-rapidapi-version\\\":\\\"1.2.8\\\",\\\"content-length\\\":\\\"442\\\",\\\"connection\\\":\\\"keep-alive\\\"},\\\"reasonPhrase\\\":\\\"OK\\\",\\\"statusCode\\\":200}},\\\"1\\\":{\\\"inboundAttachmentNames\\\":[],\\\"exceptionPayload\\\":null,\\\"inboundPropertyNames\\\":[],\\\"outboundAttachmentNames\\\":[],\\\"outboundPropertyNames\\\":[],\\\"payload\\\":[{\\\"firstname\\\":\\\"Paul\\\",\\\"airportiata\\\":\\\"NRT\\\",\\\"dob\\\":\\\"1980-01-02T00:00:00\\\",\\\"id\\\":1,\\\"experience\\\":1,\\\"email\\\":\\\"p.smith@nrtair.com\\\",\\\"lastname\\\":\\\"Smith\\\"},{\\\"firstname\\\":\\\"Kimoto\\\",\\\"airportiata\\\":\\\"LAX\\\",\\\"dob\\\":\\\"1985-02-05T00:00:00\\\",\\\"id\\\":2,\\\"experience\\\":2,\\\"email\\\":\\\"t.kimo@lax.com\\\",\\\"lastname\\\":\\\"Take\\\"},{\\\"firstname\\\":\\\"Michael\\\",\\\"airportiata\\\":\\\"AAH\\\",\\\"dob\\\":\\\"1990-03-20T00:00:00\\\",\\\"id\\\":3,\\\"experience\\\":3,\\\"email\\\":\\\"m.fassb@aah.com\\\",\\\"lastname\\\":\\\"Fassbender\\\"},{\\\"firstname\\\":\\\"Jean\\\",\\\"airportiata\\\":\\\"AUR\\\",\\\"dob\\\":\\\"1995-04-25T00:00:00\\\",\\\"id\\\":4,\\\"experience\\\":4,\\\"email\\\":\\\"j.reno@france.com\\\",\\\"lastname\\\":\\\"Reno\\\"},{\\\"firstname\\\":\\\"Marion\\\",\\\"airportiata\\\":\\\"AXN\\\",\\\"dob\\\":\\\"2000-05-30T00:00:00\\\",\\\"id\\\":5,\\\"experience\\\":5,\\\"email\\\":\\\"m.cotillard@axnair.com\\\",\\\"lastname\\\":\\\"Cotillard\\\"}],\\\"attributes\\\":null}}"}
+
+]]></types:shape>
+    </types:type>
   </types:catalog>
   <types:enrichment select="#6839902a-272e-4fc1-8274-215ab2b35bea">
     <types:processor-declaration>
@@ -153,6 +210,15 @@ type auto_188ae327_a824_4ca1_8e84_471496c76a8e_Output_Attributes = Null
         <types:message>
           <types:payload type="auto_188ae327-a824-4ca1-8e84-471496c76a8e_Output-Payload"/>
           <types:attributes type="auto_188ae327-a824-4ca1-8e84-471496c76a8e_Output-Attributes"/>
+        </types:message>
+      </types:output-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#2e547978-7546-4919-8eea-a6f38060a718">
+    <types:processor-declaration>
+      <types:output-event>
+        <types:message>
+          <types:payload type="scatter-sample"/>
         </types:message>
       </types:output-event>
     </types:processor-declaration>
