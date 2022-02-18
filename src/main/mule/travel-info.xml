@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core"
-	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
-http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
-
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
 	<flow name="airport-infoFlow" doc:id="6839902a-272e-4fc1-8274-215ab2b35bea" >
-		<http:listener doc:name="Listener" doc:id="c2cd63f6-d5f8-42bf-b108-0c7540137a4f" path="/airport" allowedMethods="GET" config-ref="HTTP_Listener_config"/>
+		<http:listener doc:name="Listener" doc:id="c2cd63f6-d5f8-42bf-b108-0c7540137a4f" path="/airports" allowedMethods="GET" config-ref="HTTP_Listener_config"/>
 		<logger level="INFO" doc:name="Logger" doc:id="acd6e5ae-392b-4a59-b3ee-f7cb63e7d1a0" />
 		<http:request method="GET" doc:name="Request" doc:id="bbcddfac-0441-4ad0-8143-34214ccae5f7" config-ref="HTTP_Request_IATA" responseTimeout="3000000" path="/airport">
 			<http:headers ><![CDATA[#[output application/java
@@ -21,5 +22,19 @@ http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/htt
 }]]]></http:query-params>
 		</http:request>
 		<logger level="INFO" doc:name="Logger" doc:id="7bfa3968-2953-4e82-8565-55cd7bf4e632" />
+	</flow>
+	<flow name="trainee-infoFlow" doc:id="188ae327-a824-4ca1-8e84-471496c76a8e" >
+		<http:listener doc:name="Listener" doc:id="e1d2a906-5378-4010-8b41-55f19590ef3d" config-ref="HTTP_Listener_config" path="/trainees" allowedMethods="GET"/>
+		<db:select doc:name="Select" doc:id="e7a005c1-71e9-4928-a39b-3914e280c170" config-ref="Database_Config_Trainee">
+			<db:sql ><![CDATA[select * from trainees]]></db:sql>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="a4c28a5c-8dbc-47d0-98e3-9646b5c19f79" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
 	</flow>
 </mule>

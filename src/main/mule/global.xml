@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core"
-	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
-http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
 	<configuration-properties doc:name="Configuration properties" doc:id="76f7576a-d64f-4aef-a92a-8e460cd85724" file="config.yaml" />
 	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="b1110447-ce38-4864-b378-c3f0e7fb2a0d" >
 		<http:listener-connection host="0.0.0.0" port="8081" />
@@ -11,4 +12,7 @@ http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/htt
 	<http:request-config name="HTTP_Request_IATA" doc:name="HTTP Request configuration" doc:id="9fec2bb7-3697-4f95-928f-b389683f4f01" basePath="${airport.basepath}" >
 		<http:request-connection host="${airport.host}" port="${airport.port}" protocol="HTTPS"/>
 	</http:request-config>
+	<db:config name="Database_Config_Trainee" doc:name="Database Config" doc:id="f435197c-9e3b-4827-98ab-7489d65997e4" >
+		<db:generic-connection url="${trainee.host}" driverClassName="${trainee.driver}" user="${trainee.user}" password="${trainee.pw}"/>
+	</db:config>
 </mule>
