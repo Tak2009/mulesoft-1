@@ -7,8 +7,7 @@ http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/htt
 http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
 http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
 http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd">
-	<flow name="controllers-aiport-infoFlow" doc:id="4dfe4dae-8e04-4505-83be-96005fbd0414" >
-		<http:listener doc:name="GET /controllers at airpot" doc:id="541689f5-d18a-46e5-b61a-c48c8c2475d3" config-ref="HTTP_Listener_config" path="/controllers" allowedMethods="GET"/>
+	<flow name="trainee-controllers-aiport-infoFlow" doc:id="4dfe4dae-8e04-4505-83be-96005fbd0414" >
 		<validation:is-true doc:name="checkIfQueryParamExists" doc:id="048a56ec-da81-495b-933b-88fb293308ae" expression="#[sizeOf(attributes.queryParams) &gt; 0]" message='#["query parameter not set."]'/>
 		<set-variable value="#[attributes.headers.'x-rapidapi-key']" doc:name="Set header key to variable" doc:id="964b241b-04d9-4c4e-a510-6ff1b649ea70" variableName="headerKey" doc:description="Without this, airpot-info flow in trainees-by-experienceFlow fails. After select oepration, the attribute headers are all overwritten (like HTTP request operation) and thus the x key needs setting to a variable"/>
 		<ee:transform doc:name='Set query to variable "query"' doc:id="c5423a3e-f4c5-4bad-accb-5e3e94562591" >

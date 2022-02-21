@@ -4,11 +4,10 @@
     <flow name="ground-controller-training-main">
         <http:listener config-ref="HTTP_Listener_config" path="/api/*">
             <http:response statusCode="#[vars.httpStatus default 200]">
-                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
             </http:response>
             <http:error-response statusCode="#[vars.httpStatus default 500]">
-                <http:body>#[payload]</http:body>
-                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
             </http:error-response>
         </http:listener>
         <apikit:router config-ref="ground-controller-training-config" />
@@ -121,7 +120,7 @@ output application/json
         </error-handler>
     </flow>
     <flow name="get:\trainees:ground-controller-training-config">
-		<flow-ref doc:name="Flow Reference" doc:id="e813cd17-71ca-4f53-9509-91d48246dbba" name="controllers-aiport-infoFlow"/>
+		<flow-ref doc:name="Flow Reference" doc:id="e813cd17-71ca-4f53-9509-91d48246dbba" name="trainee-controllers-aiport-infoFlow"/>
     </flow>
     <flow name="get:\trainees\(ID):ground-controller-training-config">
         <ee:transform>
