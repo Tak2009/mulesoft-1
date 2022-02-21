@@ -156,14 +156,17 @@ vars.traineeList map(obj, index) -> (obj.airportiata)
 			<flow-ref doc:name="airport-infoFlow" doc:id="65f26a29-a052-4870-a536-942d1e8a3630" name="airport-infoFlow" />
 			<ee:transform doc:name="Transform Message" doc:id="bdf680c2-6503-4d7d-a46d-a4f7d5e6f3b4">
 				<ee:message>
-					<ee:set-payload ><![CDATA[%dw 2.0
-output application/java
-
----
-
-vars.airportDetailList << [payload]]]></ee:set-payload>
 				</ee:message>
 				<ee:variables>
+					<ee:set-variable variableName="airportDetailList" ><![CDATA[%dw 2.0
+output application/java
+
+//var array = [payload]
+//var pushAirport = (array) ->
+//	vars.airportDetailList << array
+---
+
+vars.airportDetailList << [payload]]]></ee:set-variable>
 				</ee:variables>
 			</ee:transform>
 			<logger level="INFO" doc:name="Logger" doc:id="4fd84c78-55f7-48a2-92bc-ae37019e9288" />
@@ -173,7 +176,7 @@ vars.airportDetailList << [payload]]]></ee:set-payload>
 				<ee:set-payload><![CDATA[%dw 2.0
 output application/json
 ---
-[vars.traineeList, vars.airportDetailList]]]></ee:set-payload>
+[vars.traineeList, flatten(vars.airportDetailList)]]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
 	</flow>
