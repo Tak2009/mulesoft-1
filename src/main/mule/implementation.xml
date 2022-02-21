@@ -18,22 +18,22 @@ http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mu
 				<ee:set-variable variableName="query" ><![CDATA[%dw 2.0
 output application/java
 
-var operator = attributes.queryString
+var keywordCheck = attributes.queryString
 
-var setQuery = (operator) -> 
+var setQuery = (keywordCheck) -> 
 
 if (contains(attributes.queryString, "airport") and not (contains(attributes.queryString, "experience")))
 	"SELECT * FROM trainees WHERE airportiata = :airportParam"
-else if (contains(operator, "le"))
+else if (contains(keywordCheck, "le"))
 	"SELECT * FROM trainees WHERE experience <= :experienceParam"
-else if (contains(operator, "ge"))
+else if (contains(keywordCheck, "ge"))
 	"SELECT * FROM trainees WHERE experience >= :experienceParam"
 else
 	"SELECT * FROM trainees WHERE experience = :experienceParam"
 
 ---
 
-setQuery(operator)]]></ee:set-variable>
+setQuery(keywordCheck)]]></ee:set-variable>
 			</ee:variables>
 		</ee:transform>
 		<choice doc:name="Choice" doc:id="25e27417-b1a6-42a1-9c1d-a828cba7cad5" >
@@ -41,61 +41,11 @@ setQuery(operator)]]></ee:set-variable>
 				<flow-ref doc:name="set-aiportcodeSub_Flow" doc:id="0b3f36eb-cfe2-4e95-8c59-5ebedae8b019" name="set-aiportcodeSub_Flow"/>
 				<flow-ref doc:name="trainees-by-airportFlow" doc:id="63a21ca7-c211-48c5-9671-eb9c28c03c28" name="trainees-by-airportFlow" />
 			</when>
-			<when expression='#[contains(attributes.queryString, "experience") and not (contains (attributes.queryString, "airport"))]'>
-				<set-variable value='#[%dw 2.0&#10;import dw::core::Strings&#10;&#10;output application/java&#10;&#10;&#10;var years = (queryString) -&gt;&#10;	if(contains(queryString, "le") or contains(queryString, "ge"))&#10;	     Strings::substringAfter(queryString, ":") as Number&#10;	else if(not (contains(queryString, "le") or contains(queryString, "ge")))&#10;		Strings::substringAfter(queryString, "=") as Number&#10;	else&#10;        null&#10;---&#10;&#10;years(attributes.queryString)]' doc:name="Set experience in year" doc:id="6347c4b7-4196-48d0-90e3-33a622920877" variableName="experienceYears"/>
+			<otherwise>
+				<set-variable value='#[%dw 2.0&#10;import dw::core::Strings&#10;&#10;output application/java&#10;&#10;&#10;var years = (queryString) -&gt;&#10;	if(contains(queryString, "le") or contains(queryString, "ge"))&#10;	     Strings::substringAfter(queryString, ":") as Number&#10;	else if(not (contains(queryString, "le") or contains(queryString, "ge")))&#10;		Strings::substringAfter(queryString, "=") as Number&#10;	else&#10;        null&#10;---&#10;&#10;years(attributes.queryString)]' doc:name="Set experience in year" doc:id="6347c4b7-4196-48d0-90e3-33a622920877" variableName="experienceYears" />
 				<flow-ref doc:name="trainees-by-experienceFlow" doc:id="1a5362ad-af5e-4f4d-b553-ff808be9deb1" name="trainees-by-experienceFlow" />
-			</when>
-			<otherwise >
-				<flow-ref doc:name="Flow Reference" doc:id="6be2f061-a323-4d82-ba11-92069a829fe9" name="trainees-infoFlow"/>
 			</otherwise>
 		</choice>
-	</flow>
-	<flow name="tempFlow" doc:id="cb62f63d-aa7a-46d1-81d1-5e8caa9fbe9e" >
-		<ee:transform doc:name="Transform Message 2" doc:id="ddb30775-32ce-43f6-b85f-89eed4142e6d">
-					<ee:message>
-						<ee:set-payload><![CDATA[%dw 2.0
-output application/json
----
-payload]]></ee:set-payload>
-					</ee:message>
-					<ee:variables>
-						<ee:set-variable variableName="experienceYears"><![CDATA[%dw 2.0
-import dw::core::Strings
-
-output application/java
-
-
-var years = (queryString) ->
-	if(contains(queryString, "le") or contains(queryString, "ge"))
-	     Strings::substringAfter(queryString, ":") as Number
-	else if(not (contains(queryString, "le") or contains(queryString, "ge")))
-		Strings::substringAfter(queryString, "=") as Number
-	else
-        null
----
-
-years(attributes.queryString)]]></ee:set-variable>
-						<ee:set-variable variableName="query"><![CDATA[%dw 2.0
-output application/java
-
-var operator = attributes.queryString
-
-var setQuery = (operator) -> 
-
-if (contains(attributes.queryString, "airport") and not (contains(attributes.queryString, "experience")))
-	"SELECT * FROM trainees WHERE airportiata = :airportParam"
-else if (contains(operator, "le"))
-	"SELECT * FROM trainees WHERE experience <= :experienceParam"
-else if (contains(operator, "ge"))
-	"SELECT * FROM trainees WHERE experience >= :experienceParam"
-else
-	"SELECT * FROM trainees WHERE experience = :experienceParam"
-
----
-
-setQuery(operator)]]></ee:set-variable>
-					</ee:variables>
-				</ee:transform>
 	</flow>
 	<flow name="trainees-by-airportFlow" doc:id="8567a609-d083-43b0-9719-a30a38c54e8b" >
 		<scatter-gather doc:name="Scatter-Gather" doc:id="def76fb8-be54-481a-9a91-2dba3e95ec19">
@@ -177,6 +127,28 @@ vars.airportDetailList << [payload]]]></ee:set-variable>
 output application/json
 ---
 [vars.traineeList, flatten(vars.airportDetailList)]]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<ee:transform doc:name="Transform Message" doc:id="2fe76dcb-2a90-4d1e-8307-f4ad490a4fff">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+
+var traineeList = payload[0]
+var airportList = payload[1]
+
+var findAirport = (key) -> (payload[1] filter ((item, index) -> 
+		item.iata == key))
+
+---
+traineeList map ((obj, index) -> {
+	ID: obj.id,
+	name: obj.firstname ++" " ++ obj.lastname,
+	email: obj.email,
+	experienceYears: obj.experience,
+	airport: findAirport(obj.airportiata)[0]
+}) orderBy $.airport.iata
+]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
 	</flow>
