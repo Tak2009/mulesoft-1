@@ -10,10 +10,34 @@ http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mu
 	<flow name="controllers-aiport-infoFlow" doc:id="4dfe4dae-8e04-4505-83be-96005fbd0414" >
 		<http:listener doc:name="GET /controllers at airpot" doc:id="541689f5-d18a-46e5-b61a-c48c8c2475d3" config-ref="HTTP_Listener_config" path="/controllers" allowedMethods="GET"/>
 		<validation:is-true doc:name="checkIfQueryParamExists" doc:id="048a56ec-da81-495b-933b-88fb293308ae" expression="#[sizeOf(attributes.queryParams) &gt; 0]" message='#["query parameter not set."]'/>
-		<logger level="INFO" doc:name="Logger" doc:id="bfe3c904-cc7f-4231-87ce-941c5638f785" />
-		<set-variable value='#[%dw 2.0&#10;output application/java&#10;&#10;var operator = attributes.queryString&#10;&#10;var setQuery = (operator) -&gt; &#10;&#10;if (contains(attributes.queryString, "airport") and not (contains(attributes.queryString, "experience")))&#10;	"SELECT * FROM trainees WHERE airportiata = :airportParam"&#10;else if (contains(operator, "le"))&#10;	"SELECT * FROM trainees WHERE experience &lt;= :experienceParam"&#10;else if (contains(operator, "ge"))&#10;	"SELECT * FROM trainees WHERE experience &gt;= :experienceParam"&#10;else&#10;	"SELECT * FROM trainees WHERE experience = :experienceParam"&#10;&#10;---&#10;&#10;setQuery(operator)]' doc:name="Set query" doc:id="9d7e5a9f-3fda-4318-934c-20e37d058ca2" variableName="query"/>
+		<ee:transform doc:name='Set query to variable "query"' doc:id="c5423a3e-f4c5-4bad-accb-5e3e94562591" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="query" ><![CDATA[%dw 2.0
+output application/java
+
+var operator = attributes.queryString
+
+var setQuery = (operator) -> 
+
+if (contains(attributes.queryString, "airport") and not (contains(attributes.queryString, "experience")))
+	"SELECT * FROM trainees WHERE airportiata = :airportParam"
+else if (contains(operator, "le"))
+	"SELECT * FROM trainees WHERE experience <= :experienceParam"
+else if (contains(operator, "ge"))
+	"SELECT * FROM trainees WHERE experience >= :experienceParam"
+else
+	"SELECT * FROM trainees WHERE experience = :experienceParam"
+
+---
+
+setQuery(operator)]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
 		<choice doc:name="Choice" doc:id="25e27417-b1a6-42a1-9c1d-a828cba7cad5" >
 			<when expression='#[contains(attributes.queryString, "airport") and not (contains (attributes.queryString, "experience"))]'>
+				<flow-ref doc:name="set-aiportcodeSub_Flow" doc:id="0b3f36eb-cfe2-4e95-8c59-5ebedae8b019" name="set-aiportcodeSub_Flow"/>
 				<flow-ref doc:name="trainees-by-airportFlow" doc:id="63a21ca7-c211-48c5-9671-eb9c28c03c28" name="trainees-by-airportFlow" />
 			</when>
 			<when expression='#[contains(attributes.queryString, "experience") and not (contains (attributes.queryString, "airport"))]'>
@@ -112,34 +136,69 @@ payload."1".payload map ((obj, index) -> {
 		</ee:transform>
 	</flow>
 	<flow name="trainees-by-experienceFlow" doc:id="8a58dda1-3a84-4418-b7dc-88f744d6ce82">
-		<flow-ref doc:name="trainees-infoFlow" doc:id="bd5d39f9-ea94-41cb-bf6a-68d7769965ba" name="trainees-infoFlow" />
-		<set-variable value="#[[]]" doc:name="Set airport list array" doc:id="f3630787-781e-4ab6-afef-15d60f3918fb" variableName="airportList"/>
-		<foreach doc:name="For Each" doc:id="26aa0586-8055-40a2-9df0-15fd0cc1d19c" >
-			<ee:transform doc:name="Transform Message" doc:id="bdf680c2-6503-4d7d-a46d-a4f7d5e6f3b4">
-				<ee:message>
-				</ee:message>
-				<ee:variables>
-					<ee:set-variable variableName="airportList"><![CDATA[%dw 2.0
+		<flow-ref doc:name="trainees-infoFlow" doc:id="bd5d39f9-ea94-41cb-bf6a-68d7769965ba" name="trainees-infoFlow" target="traineeList"/>
+		<ee:transform doc:name="create a list of airport code" doc:id="0a33dcc4-0bf2-458c-9238-6b93af80d550" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
 output application/java
 
-var currentAiportList = vars.ariportList
+---
+vars.traineeList map(obj, index) -> (obj.airportiata)
+	]]></ee:set-payload>
+			</ee:message>
+			<ee:variables >
+			</ee:variables>
+		</ee:transform>
+		<set-variable value="#[[]]" doc:name="Set an empty list of airport detail" doc:id="8465b6bc-69b7-4d43-8a27-0ba89773e871" variableName="airpotDetailList"/>
+		<foreach doc:name="For Each" doc:id="26aa0586-8055-40a2-9df0-15fd0cc1d19c" >
+			<flow-ref doc:name="set-aiportcodeSub_Flow" doc:id="c5bb08a3-5899-4d84-97c9-97de78cf9b37" name="set-aiportcodeSub_Flow" />
+			<flow-ref doc:name="airport-infoFlow" doc:id="65f26a29-a052-4870-a536-942d1e8a3630" name="airport-infoFlow" />
+			<ee:transform doc:name="Transform Message" doc:id="bdf680c2-6503-4d7d-a46d-a4f7d5e6f3b4">
+				<ee:message>
+					<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+
+var currentAirportDetailList = vars.airpotDetailList
 
 ---
 
-currentAiportList << payload[0]]]></ee:set-variable>
+currentAirportDetailList << payload[0]]]></ee:set-payload>
+				</ee:message>
+				<ee:variables>
 				</ee:variables>
 			</ee:transform>
-			<flow-ref doc:name="airport-infoFlow" doc:id="65f26a29-a052-4870-a536-942d1e8a3630" name="airport-infoFlow" />
 		</foreach>
 		<ee:transform doc:name="Transform Message" doc:id="a3a31cc1-d8fe-4457-9f71-595cede3ae85">
 			<ee:message>
 				<ee:set-payload><![CDATA[%dw 2.0
 output application/json
 ---
-payload]]></ee:set-payload>
+[vars.traineeList, vars.airpotDetailList]]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
 	</flow>
+	<sub-flow name="set-aiportcodeSub_Flow" doc:id="b1f99759-d668-455f-ad30-99d072f4130b" >
+		<ee:transform doc:name='Set airport code to variable "airportCode"' doc:id="29fce953-d569-4d56-b53a-5ef7f13f8022" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="airportCode" ><![CDATA[%dw 2.0
+output application/java
+
+var checkAttribute = attributes.queryParams.airport
+
+var setAiportCodeToVariableAirportCode = (checkAttribute) ->
+	if (isEmpty(checkAttribute))
+		payload
+	else 
+		attributes.queryParams.airport
+
+---
+
+setAiportCodeToVariableAirportCode(attributes.queryParams.airport)]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+	</sub-flow>
 	<flow name="airport-infoFlow" doc:id="6839902a-272e-4fc1-8274-215ab2b35bea" >
 		<logger level="INFO" doc:name="Logger" doc:id="acd6e5ae-392b-4a59-b3ee-f7cb63e7d1a0" />
 		<http:request method="GET" doc:name="Request" doc:id="bbcddfac-0441-4ad0-8143-34214ccae5f7" config-ref="HTTP_Request_IATA" responseTimeout="3000000" path="/airport">
@@ -151,18 +210,20 @@ payload]]></ee:set-payload>
 			<http:query-params ><![CDATA[#[output application/java
 ---
 {
-	"iata" : attributes.queryParams.airport
+	"iata" : vars.airportCode
 }]]]></http:query-params>
 		</http:request>
+		<logger level="INFO" doc:name="Logger" doc:id="48b82e0e-7868-4f1d-8a0a-201c8a47e7dd" />
 	</flow>
 	<flow name="trainees-infoFlow" doc:id="188ae327-a824-4ca1-8e84-471496c76a8e" >
 		<logger level="INFO" doc:name="Logger" doc:id="f0127806-1fd2-4779-b354-e471bae51588" />
 		<db:select doc:name="Select" doc:id="e7a005c1-71e9-4928-a39b-3914e280c170" config-ref="Database_Config_Trainee">
 			<db:sql ><![CDATA[#['$(vars.query)']]]></db:sql>
 			<db:input-parameters ><![CDATA[#[{	
-	"airportParam": attributes.queryParams.airport,
+	"airportParam": vars.airportCode,
 	"experienceParam": vars.experienceYears
 }]]]></db:input-parameters>
 		</db:select>
+		<logger level="INFO" doc:name="Logger" doc:id="e3ed8cd1-fa01-4c75-88ff-02b7efd7a884" />
 	</flow>
 </mule>

@@ -1,5 +1,8 @@
 {
   "sampleData": {
-    "2e547978-7546-4919-8eea-a6f38060a718": {}
+    "2e547978-7546-4919-8eea-a6f38060a718": {},
+    "0a33dcc4-0bf2-458c-9238-6b93af80d550": {
+      "payload": "sample_data/list_json.json"
+    }
   }
 }
