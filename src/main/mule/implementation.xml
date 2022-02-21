@@ -10,6 +10,7 @@ http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mu
 	<flow name="controllers-aiport-infoFlow" doc:id="4dfe4dae-8e04-4505-83be-96005fbd0414" >
 		<http:listener doc:name="GET /controllers at airpot" doc:id="541689f5-d18a-46e5-b61a-c48c8c2475d3" config-ref="HTTP_Listener_config" path="/controllers" allowedMethods="GET"/>
 		<validation:is-true doc:name="checkIfQueryParamExists" doc:id="048a56ec-da81-495b-933b-88fb293308ae" expression="#[sizeOf(attributes.queryParams) &gt; 0]" message='#["query parameter not set."]'/>
+		<set-variable value="#[attributes.headers.'x-rapidapi-key']" doc:name="Set header key to variable" doc:id="964b241b-04d9-4c4e-a510-6ff1b649ea70" variableName="headerKey" doc:description="Without this, airpot-info flow in trainees-by-experienceFlow fails. After select oepration, the attribute headers are all overwritten (like HTTP request operation) and thus the x key needs setting to a variable"/>
 		<ee:transform doc:name='Set query to variable "query"' doc:id="c5423a3e-f4c5-4bad-accb-5e3e94562591" >
 			<ee:message >
 			</ee:message>
@@ -149,7 +150,7 @@ vars.traineeList map(obj, index) -> (obj.airportiata)
 			<ee:variables >
 			</ee:variables>
 		</ee:transform>
-		<set-variable value="#[[]]" doc:name="Set an empty list of airport detail" doc:id="8465b6bc-69b7-4d43-8a27-0ba89773e871" variableName="airpotDetailList"/>
+		<set-variable value="#[[]]" doc:name="Create an empty list for airport detail info" doc:id="8465b6bc-69b7-4d43-8a27-0ba89773e871" variableName="airportDetailList"/>
 		<foreach doc:name="For Each" doc:id="26aa0586-8055-40a2-9df0-15fd0cc1d19c" >
 			<flow-ref doc:name="set-aiportcodeSub_Flow" doc:id="c5bb08a3-5899-4d84-97c9-97de78cf9b37" name="set-aiportcodeSub_Flow" />
 			<flow-ref doc:name="airport-infoFlow" doc:id="65f26a29-a052-4870-a536-942d1e8a3630" name="airport-infoFlow" />
@@ -158,22 +159,21 @@ vars.traineeList map(obj, index) -> (obj.airportiata)
 					<ee:set-payload ><![CDATA[%dw 2.0
 output application/java
 
-var currentAirportDetailList = vars.airpotDetailList
-
 ---
 
-currentAirportDetailList << payload[0]]]></ee:set-payload>
+vars.airportDetailList << [payload]]]></ee:set-payload>
 				</ee:message>
 				<ee:variables>
 				</ee:variables>
 			</ee:transform>
+			<logger level="INFO" doc:name="Logger" doc:id="4fd84c78-55f7-48a2-92bc-ae37019e9288" />
 		</foreach>
 		<ee:transform doc:name="Transform Message" doc:id="a3a31cc1-d8fe-4457-9f71-595cede3ae85">
 			<ee:message>
 				<ee:set-payload><![CDATA[%dw 2.0
 output application/json
 ---
-[vars.traineeList, vars.airpotDetailList]]]></ee:set-payload>
+[vars.traineeList, vars.airportDetailList]]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
 	</flow>
@@ -205,7 +205,7 @@ setAiportCodeToVariableAirportCode(attributes.queryParams.airport)]]></ee:set-va
 			<http:headers ><![CDATA[#[output application/java
 ---
 {
-	"X-Rapidapi-Key" : attributes.headers.'x-rapidapi-key'
+	"X-Rapidapi-Key" : vars.headerKey
 }]]]></http:headers>
 			<http:query-params ><![CDATA[#[output application/java
 ---
