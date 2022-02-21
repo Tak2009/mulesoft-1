@@ -10,22 +10,75 @@ http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mu
 	<flow name="controllers-aiport-infoFlow" doc:id="4dfe4dae-8e04-4505-83be-96005fbd0414" >
 		<http:listener doc:name="GET /controllers at airpot" doc:id="541689f5-d18a-46e5-b61a-c48c8c2475d3" config-ref="HTTP_Listener_config" path="/controllers" allowedMethods="GET"/>
 		<validation:is-true doc:name="checkIfQueryParamExists" doc:id="048a56ec-da81-495b-933b-88fb293308ae" expression="#[sizeOf(attributes.queryParams) &gt; 0]" message='#["query parameter not set."]'/>
+		<logger level="INFO" doc:name="Logger" doc:id="bfe3c904-cc7f-4231-87ce-941c5638f785" />
+		<set-variable value='#[%dw 2.0&#10;output application/java&#10;&#10;var operator = attributes.queryString&#10;&#10;var setQuery = (operator) -&gt; &#10;&#10;if (contains(attributes.queryString, "airport") and not (contains(attributes.queryString, "experience")))&#10;	"SELECT * FROM trainees WHERE airportiata = :airportParam"&#10;else if (contains(operator, "le"))&#10;	"SELECT * FROM trainees WHERE experience &lt;= :experienceParam"&#10;else if (contains(operator, "ge"))&#10;	"SELECT * FROM trainees WHERE experience &gt;= :experienceParam"&#10;else&#10;	"SELECT * FROM trainees WHERE experience = :experienceParam"&#10;&#10;---&#10;&#10;setQuery(operator)]' doc:name="Set query" doc:id="9d7e5a9f-3fda-4318-934c-20e37d058ca2" variableName="query"/>
 		<choice doc:name="Choice" doc:id="25e27417-b1a6-42a1-9c1d-a828cba7cad5" >
-			<when expression='#[contains(attributes.queryString, "airport")]'>
+			<when expression='#[contains(attributes.queryString, "airport") and not (contains (attributes.queryString, "experience"))]'>
 				<flow-ref doc:name="trainees-by-airportFlow" doc:id="63a21ca7-c211-48c5-9671-eb9c28c03c28" name="trainees-by-airportFlow" />
 			</when>
-			<otherwise>
-				<flow-ref doc:name="trainees-by-experienceFlow" doc:id="1a5362ad-af5e-4f4d-b553-ff808be9deb1" name="trainees-by-experienceFlow"/>
+			<when expression='#[contains(attributes.queryString, "experience") and not (contains (attributes.queryString, "airport"))]'>
+				<set-variable value='#[%dw 2.0&#10;import dw::core::Strings&#10;&#10;output application/java&#10;&#10;&#10;var years = (queryString) -&gt;&#10;	if(contains(queryString, "le") or contains(queryString, "ge"))&#10;	     Strings::substringAfter(queryString, ":") as Number&#10;	else if(not (contains(queryString, "le") or contains(queryString, "ge")))&#10;		Strings::substringAfter(queryString, "=") as Number&#10;	else&#10;        null&#10;---&#10;&#10;years(attributes.queryString)]' doc:name="Set experience in year" doc:id="6347c4b7-4196-48d0-90e3-33a622920877" variableName="experienceYears"/>
+				<flow-ref doc:name="trainees-by-experienceFlow" doc:id="1a5362ad-af5e-4f4d-b553-ff808be9deb1" name="trainees-by-experienceFlow" />
+			</when>
+			<otherwise >
+				<flow-ref doc:name="Flow Reference" doc:id="6be2f061-a323-4d82-ba11-92069a829fe9" name="trainees-infoFlow"/>
 			</otherwise>
 		</choice>
+	</flow>
+	<flow name="tempFlow" doc:id="cb62f63d-aa7a-46d1-81d1-5e8caa9fbe9e" >
+		<ee:transform doc:name="Transform Message 2" doc:id="ddb30775-32ce-43f6-b85f-89eed4142e6d">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="experienceYears"><![CDATA[%dw 2.0
+import dw::core::Strings
+
+output application/java
+
+
+var years = (queryString) ->
+	if(contains(queryString, "le") or contains(queryString, "ge"))
+	     Strings::substringAfter(queryString, ":") as Number
+	else if(not (contains(queryString, "le") or contains(queryString, "ge")))
+		Strings::substringAfter(queryString, "=") as Number
+	else
+        null
+---
+
+years(attributes.queryString)]]></ee:set-variable>
+						<ee:set-variable variableName="query"><![CDATA[%dw 2.0
+output application/java
+
+var operator = attributes.queryString
+
+var setQuery = (operator) -> 
+
+if (contains(attributes.queryString, "airport") and not (contains(attributes.queryString, "experience")))
+	"SELECT * FROM trainees WHERE airportiata = :airportParam"
+else if (contains(operator, "le"))
+	"SELECT * FROM trainees WHERE experience <= :experienceParam"
+else if (contains(operator, "ge"))
+	"SELECT * FROM trainees WHERE experience >= :experienceParam"
+else
+	"SELECT * FROM trainees WHERE experience = :experienceParam"
+
+---
+
+setQuery(operator)]]></ee:set-variable>
+					</ee:variables>
+				</ee:transform>
 	</flow>
 	<flow name="trainees-by-airportFlow" doc:id="8567a609-d083-43b0-9719-a30a38c54e8b" >
 		<scatter-gather doc:name="Scatter-Gather" doc:id="def76fb8-be54-481a-9a91-2dba3e95ec19">
 			<route>
-				<flow-ref doc:name="getAirports" doc:id="dd9ffed0-0e02-4da4-8d60-74de85acd3c8" name="airport-infoFlow" />
+				<flow-ref doc:name="airport-infoFlow" doc:id="dd9ffed0-0e02-4da4-8d60-74de85acd3c8" name="airport-infoFlow" />
 			</route>
 			<route>
-				<flow-ref doc:name="getTrainees" doc:id="ca8de277-5972-4995-9923-9e09677bc709" name="trainees-infoFlow" />
+				<flow-ref doc:name="trainees-infoFlow" doc:id="ca8de277-5972-4995-9923-9e09677bc709" name="trainees-infoFlow" />
 			</route>
 		</scatter-gather>
 		<logger level="INFO" doc:name="Logger" doc:id="7f937867-ce81-417a-bef6-5048608eff2e" message="payload" />
@@ -59,36 +112,31 @@ payload."1".payload map ((obj, index) -> {
 		</ee:transform>
 	</flow>
 	<flow name="trainees-by-experienceFlow" doc:id="8a58dda1-3a84-4418-b7dc-88f744d6ce82">
-		<flow-ref doc:name="getTrainees" doc:id="bd5d39f9-ea94-41cb-bf6a-68d7769965ba" name="trainees-infoFlow" />
-		<foreach doc:name="For Each" doc:id="89025ec1-a15b-4682-b846-e04052082f7e" />
-		<flow-ref doc:name="getAirports" doc:id="c6f7da61-4fa7-46a8-a74e-147824b86257" name="airport-infoFlow" />
-		<logger level="INFO" doc:name="Logger" doc:id="8a6cf77e-8e84-4210-8880-4bf2debf591b" message="payload" />
-		<ee:transform doc:name="Transform Message" doc:id="a30377b2-f7c0-4898-895c-4a23d368fcb9">
+		<flow-ref doc:name="trainees-infoFlow" doc:id="bd5d39f9-ea94-41cb-bf6a-68d7769965ba" name="trainees-infoFlow" />
+		<set-variable value="#[[]]" doc:name="Set airport list array" doc:id="f3630787-781e-4ab6-afef-15d60f3918fb" variableName="airportList"/>
+		<foreach doc:name="For Each" doc:id="26aa0586-8055-40a2-9df0-15fd0cc1d19c" >
+			<ee:transform doc:name="Transform Message" doc:id="bdf680c2-6503-4d7d-a46d-a4f7d5e6f3b4">
+				<ee:message>
+				</ee:message>
+				<ee:variables>
+					<ee:set-variable variableName="airportList"><![CDATA[%dw 2.0
+output application/java
+
+var currentAiportList = vars.ariportList
+
+---
+
+currentAiportList << payload[0]]]></ee:set-variable>
+				</ee:variables>
+			</ee:transform>
+			<flow-ref doc:name="airport-infoFlow" doc:id="65f26a29-a052-4870-a536-942d1e8a3630" name="airport-infoFlow" />
+		</foreach>
+		<ee:transform doc:name="Transform Message" doc:id="a3a31cc1-d8fe-4457-9f71-595cede3ae85">
 			<ee:message>
 				<ee:set-payload><![CDATA[%dw 2.0
 output application/json
 ---
 payload]]></ee:set-payload>
-			</ee:message>
-		</ee:transform>
-		<ee:transform doc:name="Transform Message" doc:id="87ed31d9-28ab-4923-8864-5faecbbc4552">
-			<ee:message>
-				<ee:set-payload><![CDATA[%dw 2.0
-output application/json
-
-var airportInfo = payload."0".payload
-
----
-payload."1".payload map ((obj, index) -> {
-	ID: obj.id,
-	name: obj.firstname ++" " ++ obj.lastname,
-	email: obj.email,
-	experienceYears: obj.experience,
-	airport: airportInfo
-}) orderBy -$.experienceYears
-
-
-]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
 	</flow>
@@ -110,9 +158,11 @@ payload."1".payload map ((obj, index) -> {
 	<flow name="trainees-infoFlow" doc:id="188ae327-a824-4ca1-8e84-471496c76a8e" >
 		<logger level="INFO" doc:name="Logger" doc:id="f0127806-1fd2-4779-b354-e471bae51588" />
 		<db:select doc:name="Select" doc:id="e7a005c1-71e9-4928-a39b-3914e280c170" config-ref="Database_Config_Trainee">
-			<db:sql ><![CDATA[SELECT * FROM trainees
-WHERE airportiata = :param ]]></db:sql>
-			<db:input-parameters ><![CDATA[#[{param: attributes.queryParams.airport}]]]></db:input-parameters>
+			<db:sql ><![CDATA[#['$(vars.query)']]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{	
+	"airportParam": attributes.queryParams.airport,
+	"experienceParam": vars.experienceYears
+}]]]></db:input-parameters>
 		</db:select>
 	</flow>
 </mule>
